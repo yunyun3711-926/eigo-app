@@ -25,13 +25,16 @@
 
 ```
 eigo-app/
-├── index.html        # エントリーポイント（ステージ選択・クイズ・結果の3画面）
+├── index.html           # エントリーポイント（ステージ選択・クイズ・会話・結果の4画面）
 ├── css/
-│   └── style.css     # スタイル
+│   └── style.css        # スタイル
 └── js/
-    ├── questions.js  # 問題データ（STAGES 配列。choices の先頭が正解）
-    └── main.js       # アプリのロジック（画面切り替え・採点・進捗の保存）
+    ├── questions.js     # クイズの問題データ（STAGES 配列。choices の先頭が正解）
+    ├── conversations.js # 番外編・会話シミュレーションのデータ（CONVERSATIONS 配列。choices の先頭が一番よい返し）
+    └── main.js          # アプリのロジック（画面切り替え・採点・進捗の保存）
 ```
+
+- 番外編の会話シミュレーションはクイズのレベルとは独立しており、いつでも遊べる。
 
 - 問題データは `fetch` を使わずに済むよう、JSON ではなく JS ファイルに定数として置いている（`index.html` を直接開いて動かすため）。
 - 進捗（解放済みステージ数・最高点）は localStorage の `eigo-app-progress` に保存する。
