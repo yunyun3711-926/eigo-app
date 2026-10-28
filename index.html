@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>セラピスト英語クイズ</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/questions.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">セラピスト英語クイズ</h1>
+    <p class="app-subtitle">接客で使える英語を、クイズで身につけよう</p>
+  </header>
+
+  <main class="app-main">
+    <!-- ステージ選択画面 -->
+    <section id="home-screen" class="screen">
+      <p class="lead">各ステージ10問。全問正解すると次のステージに進めます。</p>
+      <ol id="stage-list" class="stage-list"></ol>
+      <button type="button" id="reset-button" class="text-button">学習記録をリセット</button>
+    </section>
+
+    <!-- クイズ画面 -->
+    <section id="quiz-screen" class="screen" hidden>
+      <div class="quiz-top">
+        <span id="quiz-stage-name" class="stage-tag"></span>
+        <span id="quiz-progress-text" class="progress-text"></span>
+      </div>
+      <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+
+      <div class="question-card">
+        <p class="question-label">この日本語を英語で言うと？</p>
+        <p id="question-text" class="question-text"></p>
+      </div>
+
+      <div id="choice-list" class="choice-list"></div>
+
+      <div id="feedback" class="feedback" hidden>
+        <p id="feedback-result" class="feedback-result"></p>
+        <div class="answer-box">
+          <p class="answer-label">正解</p>
+          <p id="answer-en" class="answer-en"></p>
+          <p id="answer-kana" class="answer-kana"></p>
+          <button type="button" id="speak-button" class="speak-button" hidden>🔊 発音を聞く</button>
+        </div>
+        <p id="feedback-explanation" class="feedback-explanation"></p>
+        <button type="button" id="next-button" class="primary-button">次の問題へ</button>
+      </div>
+
+      <button type="button" id="quit-button" class="text-button">ステージ選択にもどる</button>
+    </section>
+
+    <!-- 結果画面 -->
+    <section id="result-screen" class="screen" hidden>
+      <div class="result-card">
+        <p id="result-icon" class="result-icon"></p>
+        <h2 id="result-title" class="result-title"></h2>
+        <p id="result-score" class="result-score"></p>
+        <p id="result-message" class="result-message"></p>
+      </div>
+      <div class="result-actions">
+        <button type="button" id="next-stage-button" class="primary-button" hidden>次のステージへ進む</button>
+        <button type="button" id="retry-button" class="secondary-button">もう一度チャレンジ</button>
+        <button type="button" id="home-button" class="text-button">ステージ選択にもどる</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
