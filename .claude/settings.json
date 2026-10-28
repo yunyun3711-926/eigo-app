@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "PowerShell(git *)"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(sudo *)",
+      "PowerShell(rm *)",
+      "PowerShell(del *)",
+      "PowerShell(rmdir *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(sudo *)",
+
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Bash(cat *.env*)",
+      "Bash(less *.env*)",
+      "Bash(head *.env*)",
+      "Bash(tail *.env*)",
+      "Bash(grep *.env*)",
+      "PowerShell(cat *.env*)",
+      "PowerShell(type *.env*)",
+      "PowerShell(Get-Content *.env*)",
+      "PowerShell(Select-String *.env*)"
+    ]
+  }
+}

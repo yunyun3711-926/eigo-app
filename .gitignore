@@ -1,0 +1,17 @@
+# 環境変数・秘密情報
+.env
+.env.*
+
+# Claude Code の個人用設定
+.claude/settings.local.json
+
+# OS が自動で作るファイル
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# エディタ
+.vscode/
+
+# ログ
+*.log
