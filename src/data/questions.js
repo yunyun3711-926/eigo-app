@@ -1,6 +1,7 @@
 // クイズの問題データ
 // stages の順番がレベルの順番（全問正解で次のステージが解放される）
 // choices の先頭が正解。表示時にシャッフルする
+// 各問題の id は Supabase に正解回数を記録するためのキー。一度決めたら変更しないこと
 export const STAGES = [
   {
     id: "reception",
@@ -9,6 +10,7 @@ export const STAGES = [
     description: "お出迎えから問診まで",
     questions: [
       {
+        id: "reception-01",
         ja: "いらっしゃいませ。ご予約はされていますか？",
         choices: [
           { en: "Welcome. Do you have a reservation?", kana: "ウェルカム。ドゥー ユー ハヴ ア レザベーション？" },
@@ -18,6 +20,7 @@ export const STAGES = [
         explanation: "予約の有無は \"Do you have a reservation?\" と聞くのが定番です。\"book a table\" はレストランの席の予約なので、サロンでは使いません。"
       },
       {
+        id: "reception-02",
         ja: "お名前をお伺いしてもよろしいですか？",
         choices: [
           { en: "May I have your name, please?", kana: "メイ アイ ハヴ ユア ネーム、プリーズ？" },
@@ -27,6 +30,7 @@ export const STAGES = [
         explanation: "\"May I have ~?\" は「〜をいただけますか」という丁寧な言い方です。\"What's your name?\" は少し直接的なので、接客では \"May I have your name?\" が安心です。"
       },
       {
+        id: "reception-03",
         ja: "こちらの問診票にご記入ください。",
         choices: [
           { en: "Please fill out this form.", kana: "プリーズ フィル アウト ディス フォーム。" },
@@ -36,6 +40,7 @@ export const STAGES = [
         explanation: "「記入する」は \"fill out\" です。問診票は \"form\" や \"questionnaire\"（クエスチョネア）と言います。"
       },
       {
+        id: "reception-04",
         ja: "本日はどのマッサージになさいますか？",
         choices: [
           { en: "Which massage would you like today?", kana: "ウィッチ マッサージ ウッジュー ライク トゥデイ？" },
@@ -45,6 +50,7 @@ export const STAGES = [
         explanation: "\"Which ~ would you like?\" は「どの〜になさいますか」と選んでもらうときの丁寧な表現です。メニュー表を見せながら言うと伝わりやすくなります。"
       },
       {
+        id: "reception-05",
         ja: "特に気になるところはありますか？",
         choices: [
           { en: "Are there any areas you'd like me to focus on?", kana: "アー ゼア エニー エリアズ ユード ライク ミー トゥ フォーカス オン？" },
@@ -54,6 +60,7 @@ export const STAGES = [
         explanation: "「重点的にほぐしてほしい部位」を聞く表現です。\"areas\"（エリアズ）は体の部位のこと。肩なら \"shoulders\"（ショルダーズ）、腰なら \"lower back\"（ロウワー バック）と返ってくることが多いです。"
       },
       {
+        id: "reception-06",
         ja: "強めと弱め、どちらの力加減がお好みですか？",
         choices: [
           { en: "Do you prefer firm or light pressure?", kana: "ドゥー ユー プリファー ファーム オア ライト プレッシャー？" },
@@ -63,6 +70,7 @@ export const STAGES = [
         explanation: "力加減は \"pressure\"（プレッシャー）です。強めは \"firm\"（ファーム）、弱めは \"light\"（ライト）。\"strong\" も通じますが、\"firm\" のほうがサロンらしい表現です。"
       },
       {
+        id: "reception-07",
         ja: "アレルギーはありますか？",
         choices: [
           { en: "Do you have any allergies?", kana: "ドゥー ユー ハヴ エニー アラジーズ？" },
@@ -72,6 +80,7 @@ export const STAGES = [
         explanation: "\"allergy\" は英語では「アラジー」と発音します。「アレルギー」では通じにくいので注意しましょう。オイルを使う前に必ず確認したい質問です。"
       },
       {
+        id: "reception-08",
         ja: "最近、ケガや手術をされましたか？",
         choices: [
           { en: "Have you had any injuries or surgery recently?", kana: "ハヴ ユー ハッド エニー インジュリーズ オア サージャリー リースントリー？" },
@@ -81,6 +90,7 @@ export const STAGES = [
         explanation: "ケガは \"injury\"（インジュリー）、手術は \"surgery\"（サージャリー）です。安全に施術するための大切な確認なので、覚えておきましょう。"
       },
       {
+        id: "reception-09",
         ja: "こちらでお着替えください。",
         choices: [
           { en: "You can change your clothes here.", kana: "ユー キャン チェインジ ユア クローズ ヒア。" },
@@ -90,6 +100,7 @@ export const STAGES = [
         explanation: "\"change your clothes\" で「着替える」です。\"exchange money\" は「両替」なので別の意味になります。着替えを渡すときは \"Here are your clothes.\" と添えると親切です。"
       },
       {
+        id: "reception-10",
         ja: "お荷物はこちらのカゴに入れてください。",
         choices: [
           { en: "Please put your belongings in this basket.", kana: "プリーズ プット ユア ビロンギングズ イン ディス バスケット。" },
@@ -107,6 +118,7 @@ export const STAGES = [
     description: "体勢の案内や声かけ",
     questions: [
       {
+        id: "session-01",
         ja: "うつ伏せになってください。",
         choices: [
           { en: "Please lie face down.", kana: "プリーズ ライ フェイス ダウン。" },
@@ -116,6 +128,7 @@ export const STAGES = [
         explanation: "\"face down\"（顔を下に）でうつ伏せです。\"lie\"（ライ）は「横になる」。ベッドを手で示しながら言うとより伝わります。"
       },
       {
+        id: "session-02",
         ja: "仰向けになってください。",
         choices: [
           { en: "Please turn over and lie face up.", kana: "プリーズ ターン オーヴァー アンド ライ フェイス アップ。" },
@@ -125,6 +138,7 @@ export const STAGES = [
         explanation: "\"turn over\" は「寝返りを打つ・ひっくり返る」、\"face up\" は「顔を上に」で仰向けです。うつ伏せ（face down）とセットで覚えましょう。"
       },
       {
+        id: "session-03",
         ja: "力加減はいかがですか？",
         choices: [
           { en: "How is the pressure?", kana: "ハウ イズ ザ プレッシャー？" },
@@ -134,6 +148,7 @@ export const STAGES = [
         explanation: "施術中に一番よく使うフレーズです。\"Is the pressure okay?\"（イズ ザ プレッシャー オーケー？）でも同じ意味になります。"
       },
       {
+        id: "session-04",
         ja: "痛かったら教えてください。",
         choices: [
           { en: "Please let me know if it hurts.", kana: "プリーズ レット ミー ノウ イフ イット ハーツ。" },
@@ -143,6 +158,7 @@ export const STAGES = [
         explanation: "\"let me know\" は「教えてください」、\"hurt\"（ハート）は「痛む」です。施術の最初に伝えておくと、お客様が安心できます。"
       },
       {
+        id: "session-05",
         ja: "寒くないですか？",
         choices: [
           { en: "Are you warm enough?", kana: "アー ユー ウォーム イナフ？" },
@@ -152,6 +168,7 @@ export const STAGES = [
         explanation: "日本語をそのまま訳した \"Aren't you cold?\" は、Yes と No のどちらで答えればいいか迷わせてしまいます。\"Are you warm enough?\"（十分暖かいですか）と聞くと答えやすくなります。"
       },
       {
+        id: "session-06",
         ja: "タオルをお掛けしますね。",
         choices: [
           { en: "I'll put a towel over you.", kana: "アイル プット ア タオル オーヴァー ユー。" },
@@ -161,6 +178,7 @@ export const STAGES = [
         explanation: "\"over you\" で「あなたの上に」。体に触れる前や何かをする前に、こうしてひと言伝えるとお客様が安心します。"
       },
       {
+        id: "session-07",
         ja: "腕の力を抜いてください。",
         choices: [
           { en: "Please relax your arms.", kana: "プリーズ リラックス ユア アームズ。" },
@@ -170,6 +188,7 @@ export const STAGES = [
         explanation: "「力を抜く」は \"relax\" です。\"raise\"（レイズ・上げる）と音が似ているので、聞き間違えに注意しましょう。"
       },
       {
+        id: "session-08",
         ja: "少し強めにしますね。",
         choices: [
           { en: "I'll use a little more pressure.", kana: "アイル ユーズ ア リトル モア プレッシャー。" },
@@ -179,6 +198,7 @@ export const STAGES = [
         explanation: "\"more\" で強め、\"less\"（レス）で弱めです。\"more\" と \"less\" を入れ替えるだけで、両方の場面に使えます。"
       },
       {
+        id: "session-09",
         ja: "深呼吸してください。",
         choices: [
           { en: "Please take a deep breath.", kana: "プリーズ テイク ア ディープ ブレス。" },
@@ -188,6 +208,7 @@ export const STAGES = [
         explanation: "\"take a deep breath\" で「深呼吸する」です。\"hold your breath\" は「息を止める」なので逆の意味になります。"
       },
       {
+        id: "session-10",
         ja: "終わりました。ゆっくり起き上がってください。",
         choices: [
           { en: "We're all done. Please sit up slowly.", kana: "ウィア オール ダン。プリーズ スィット アップ スロウリー。" },
@@ -205,6 +226,7 @@ export const STAGES = [
     description: "お支払いからお見送りまで",
     questions: [
       {
+        id: "checkout-01",
         ja: "いかがでしたか？",
         choices: [
           { en: "How was everything?", kana: "ハウ ワズ エヴリシング？" },
@@ -214,6 +236,7 @@ export const STAGES = [
         explanation: "施術後に感想を聞く定番の表現です。\"How much\" にすると「全部でいくらでしたか」という値段の質問になってしまいます。"
       },
       {
+        id: "checkout-02",
         ja: "お水をどうぞ。",
         choices: [
           { en: "Here's some water for you.", kana: "ヒアズ サム ウォーター フォー ユー。" },
@@ -223,6 +246,7 @@ export const STAGES = [
         explanation: "\"Here's ~ for you.\" は物を手渡すときの便利な表現です。お茶なら \"Here's some tea for you.\" になります。"
       },
       {
+        id: "checkout-03",
         ja: "お会計は8,000円です。",
         choices: [
           { en: "That will be 8,000 yen.", kana: "ザット ウィル ビー エイト サウザンド イェン。" },
@@ -232,6 +256,7 @@ export const STAGES = [
         explanation: "\"That will be ~.\" は金額を伝える決まり文句です。1,000 は \"thousand\"（サウザンド）、100 は \"hundred\"（ハンドレッド）。金額は聞き間違えやすいので、レジの画面を見せると確実です。"
       },
       {
+        id: "checkout-04",
         ja: "お支払いは現金ですか、カードですか？",
         choices: [
           { en: "Will you be paying by cash or card?", kana: "ウィル ユー ビー ペイイング バイ キャッシュ オア カード？" },
@@ -241,6 +266,7 @@ export const STAGES = [
         explanation: "支払い方法は \"pay by ~\" で表します。短く \"Cash or card?\" と聞いても通じます。"
       },
       {
+        id: "checkout-05",
         ja: "こちらにサインをお願いします。",
         choices: [
           { en: "Please sign here.", kana: "プリーズ サイン ヒア。" },
@@ -250,6 +276,7 @@ export const STAGES = [
         explanation: "\"sign\"（サイン）は「署名する」、\"sing\"（スィング）は「歌う」です。つづりが似ているので気をつけましょう。"
       },
       {
+        id: "checkout-06",
         ja: "レシートはご利用ですか？",
         choices: [
           { en: "Would you like a receipt?", kana: "ウッジュー ライク ア リスィート？" },
@@ -259,6 +286,7 @@ export const STAGES = [
         explanation: "\"receipt\" は p を発音せず「リスィート」と読みます。\"recipe\"（レスィピ）は料理のレシピ、\"refund\" は返金です。"
       },
       {
+        id: "checkout-07",
         ja: "お忘れ物はありませんか？",
         choices: [
           { en: "Do you have all your belongings?", kana: "ドゥー ユー ハヴ オール ユア ビロンギングズ？" },
@@ -268,6 +296,7 @@ export const STAGES = [
         explanation: "「持ち物は全部お持ちですか」という言い方で、忘れ物を確認します。受付で習った \"belongings\" がここでも使えます。"
       },
       {
+        id: "checkout-08",
         ja: "今日はお水を多めに飲んでください。",
         choices: [
           { en: "Please drink plenty of water today.", kana: "プリーズ ドリンク プレンティ オヴ ウォーター トゥデイ。" },
@@ -277,6 +306,7 @@ export const STAGES = [
         explanation: "\"plenty of ~\" は「たっぷりの〜」です。施術後のアドバイスとして、お見送りの前に伝えましょう。"
       },
       {
+        id: "checkout-09",
         ja: "次回のご予約はいかがですか？",
         choices: [
           { en: "Would you like to book your next visit?", kana: "ウッジュー ライク トゥ ブック ユア ネクスト ヴィジット？" },
@@ -286,6 +316,7 @@ export const STAGES = [
         explanation: "\"book\" は動詞で「予約する」です。\"next visit\" は「次回のご来店」。旅行中のお客様には \"Will you be in town for a while?\"（しばらく滞在されますか）と聞くのもよいでしょう。"
       },
       {
+        id: "checkout-10",
         ja: "ありがとうございました。お気をつけて。",
         choices: [
           { en: "Thank you very much. Have a nice day!", kana: "サンキュー ヴェリー マッチ。ハヴ ア ナイス デイ！" },

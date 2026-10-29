@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { STAGES } from "../data/questions";
-import { loadProgress, saveProgress } from "../lib/progress";
+import {
+  fetchLevels,
+  fetchQuestionStats,
+  recordAnswerResult,
+  saveQuestionStat,
+  saveStageResult,
+  unlockStage
+} from "../lib/quizRepository";
+import { isStageUnlocked, toLevelMap } from "../lib/levels";
 import { shuffle } from "../lib/utils";
 import ChoiceList from "../components/ChoiceList";
 import Feedback from "../components/Feedback";
@@ -20,7 +28,14 @@ function QuizGame({ stageId, onRetry }) {
   const stageIndex = STAGES.findIndex((stage) => stage.id === stageId);
   const stage = STAGES[stageIndex];
 
-  const [progress] = useState(() => loadProgress(user.id));
+  // null の間は Supabase から読み込み中
+  const [levelMap, setLevelMap] = useState(null);
+  // { 問題ID: { correct_count, answer_count } }
+  const [statMap, setStatMap] = useState({});
+  const [loadError, setLoadError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const [questions] = useState(() => (stage ? shuffle(stage.questions) : []));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -28,20 +43,88 @@ function QuizGame({ stageId, onRetry }) {
   const [lastAnswer, setLastAnswer] = useState(null);
   const [result, setResult] = useState(null);
 
-  // 存在しないステージや、まだ解放されていないステージはトップへ戻す
-  if (!stage || stageIndex >= progress.unlocked) {
+  // 【Read】レベルとこのステージの問題ごとの成績を読み込む
+  useEffect(() => {
+    if (!stage) {
+      return undefined;
+    }
+    let ignore = false;
+    Promise.all([fetchLevels(user.id), fetchQuestionStats(user.id, stage.id)])
+      .then(([levels, stats]) => {
+        if (ignore) {
+          return;
+        }
+        setLevelMap(toLevelMap(levels));
+        setStatMap(Object.fromEntries(stats.map((row) => [row.question_id, row])));
+      })
+      .catch(() => {
+        if (!ignore) {
+          setLoadError("学習記録を読み込めませんでした。通信状況を確認して、もう一度お試しください。");
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [user.id, stage]);
+
+  if (!stage) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (loadError) {
+    return (
+      <section className="simple-form">
+        <p className="error-message" role="alert">{loadError}</p>
+        <Link to="/" className="text-button">クイズ選択にもどる</Link>
+      </section>
+    );
+  }
+
+  if (levelMap === null) {
+    return <p className="loading">読み込み中…</p>;
+  }
+
+  // まだ解放されていないステージはトップへ戻す
+  if (!isStageUnlocked(levelMap, stageIndex)) {
     return <Navigate to="/" replace />;
   }
 
   const total = questions.length;
   const question = questions[currentIndex];
   const isLast = currentIndex === total - 1;
+  const questionStat = statMap[question.id];
 
-  function handleAnswer(isCorrect) {
+  function handleAnswer(isCorrect, choice) {
     setLastAnswer(isCorrect);
     if (isCorrect) {
       setCorrectCount((count) => count + 1);
     }
+
+    // 正解回数・回答回数を1つ増やす
+    const nextStat = {
+      correct_count: (questionStat?.correct_count ?? 0) + (isCorrect ? 1 : 0),
+      answer_count: (questionStat?.answer_count ?? 0) + 1
+    };
+    setStatMap((current) => ({ ...current, [question.id]: nextStat }));
+
+    // 【Create】回答結果の履歴 ／ 【Create・Update】問題ごとの成績 を保存する
+    // 保存を待たずに解説を表示し、失敗したときだけ知らせる
+    Promise.all([
+      recordAnswerResult(user.id, {
+        stageId: stage.id,
+        questionId: question.id,
+        selectedAnswer: choice.en,
+        isCorrect
+      }),
+      saveQuestionStat(user.id, {
+        questionId: question.id,
+        stageId: stage.id,
+        correctCount: nextStat.correct_count,
+        answerCount: nextStat.answer_count
+      })
+    ]).catch(() => {
+      setSaveError("回答の記録を保存できませんでした。通信状況を確認してください。");
+    });
   }
 
   function handleNext() {
@@ -54,24 +137,26 @@ function QuizGame({ stageId, onRetry }) {
     finish();
   }
 
-  function finish() {
+  // 【Create・Update】ステージの結果を保存し、全問正解なら次のステージを解放する
+  async function finish() {
     const isPerfect = correctCount === total;
     const hasNextStage = stageIndex < STAGES.length - 1;
+    const currentLevel = levelMap[stage.id];
+    const leveledUp = isPerfect && hasNextStage && !isStageUnlocked(levelMap, stageIndex + 1);
 
-    // 最新の記録を読み直してから更新する
-    const latest = loadProgress(user.id);
-    const best = latest.bestScores[stage.id];
-    if (best === undefined || correctCount > best) {
-      latest.bestScores[stage.id] = correctCount;
+    setSaving(true);
+    try {
+      await saveStageResult(user.id, stage.id, {
+        bestScore: Math.max(currentLevel?.best_score ?? 0, correctCount),
+        isCleared: Boolean(currentLevel?.is_cleared) || isPerfect
+      });
+      if (isPerfect && hasNextStage) {
+        await unlockStage(user.id, STAGES[stageIndex + 1].id);
+      }
+    } catch (error) {
+      setSaveError("結果を保存できませんでした。通信状況を確認して、もう一度お試しください。");
     }
-
-    // 全問正解なら次のステージを解放
-    let leveledUp = false;
-    if (isPerfect && hasNextStage && latest.unlocked <= stageIndex + 1) {
-      latest.unlocked = stageIndex + 2;
-      leveledUp = true;
-    }
-    saveProgress(user.id, latest);
+    setSaving(false);
 
     setResult({ isPerfect, hasNextStage, leveledUp });
     window.scrollTo(0, 0);
@@ -102,6 +187,7 @@ function QuizGame({ stageId, onRetry }) {
 
     return (
       <section>
+        {saveError && <p className="error-message" role="alert">{saveError}</p>}
         <div className="result-card">
           <p className="result-icon">{icon}</p>
           <h2 className="result-title">{title}</h2>
@@ -137,6 +223,8 @@ function QuizGame({ stageId, onRetry }) {
         <div className="progress-fill" style={{ width: `${(currentIndex / total) * 100}%` }} />
       </div>
 
+      {saveError && <p className="error-message" role="alert">{saveError}</p>}
+
       <div className="question-card">
         <p className="question-label">この日本語を英語で言うと？</p>
         <p className="question-text">{question.ja}</p>
@@ -148,11 +236,12 @@ function QuizGame({ stageId, onRetry }) {
         <Feedback
           isCorrect={lastAnswer}
           resultText={lastAnswer ? "⭕ 正解！" : "❌ 不正解…"}
+          note={`この問題の正解回数：累計 ${questionStat?.correct_count ?? 0}回（${questionStat?.answer_count ?? 0}回中）`}
           answerLabel="正解"
           answer={question.choices[0]}
           explanation={question.explanation}
-          nextLabel={isLast ? "結果を見る" : "次の問題へ"}
-          onNext={handleNext}
+          nextLabel={saving ? "保存中…" : isLast ? "結果を見る" : "次の問題へ"}
+          onNext={saving ? undefined : handleNext}
         />
       )}
 

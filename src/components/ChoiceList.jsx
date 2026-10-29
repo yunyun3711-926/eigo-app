@@ -16,7 +16,8 @@ export default function ChoiceList({ choices, onAnswer }) {
       return;
     }
     setSelectedIndex(index);
-    onAnswer(shuffled[index].isCorrect);
+    // 正解かどうかと、選んだ選択肢そのものを親に渡す
+    onAnswer(shuffled[index].isCorrect, shuffled[index]);
   }
 
   return (

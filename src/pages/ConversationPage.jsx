@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { CONVERSATIONS } from "../data/conversations";
-import { loadProgress, saveProgress } from "../lib/progress";
+import { loadConversationBest, saveConversationBest } from "../lib/progress";
 import ChoiceList from "../components/ChoiceList";
 import Feedback from "../components/Feedback";
 import Bubble from "../components/Bubble";
@@ -82,11 +82,10 @@ function ConversationGame({ conversationId, onRetry }) {
       { speaker: "customer", en: conversation.ending.customer, sub: conversation.ending.ja }
     ]);
 
-    const latest = loadProgress(user.id);
-    const bestCount = latest.conversationBest[conversation.id];
+    const bestMap = loadConversationBest(user.id);
+    const bestCount = bestMap[conversation.id];
     if (bestCount === undefined || goodCount > bestCount) {
-      latest.conversationBest[conversation.id] = goodCount;
-      saveProgress(user.id, latest);
+      saveConversationBest(user.id, { ...bestMap, [conversation.id]: goodCount });
     }
     setFinished(true);
   }

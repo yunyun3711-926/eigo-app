@@ -1,17 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { STAGES } from "../data/questions";
 import { CONVERSATIONS } from "../data/conversations";
-import { createInitialProgress, loadProgress, saveProgress } from "../lib/progress";
+import { deleteAllQuizData, fetchLevels, fetchQuestionStats } from "../lib/quizRepository";
+import { isStageUnlocked, sumCorrectByStage, toLevelMap } from "../lib/levels";
+import { loadConversationBest, saveConversationBest } from "../lib/progress";
 
 // クイズ選択画面（シンプルなフォーム）
 // 選択肢の値は "quiz:ステージID" または "conversation:会話ID"
 export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(() => loadProgress(user.id));
+  // null の間は Supabase から読み込み中
+  const [levelMap, setLevelMap] = useState(null);
+  const [correctTotals, setCorrectTotals] = useState({});
+  const [conversationBest, setConversationBest] = useState(() => loadConversationBest(user.id));
   const [selected, setSelected] = useState(`quiz:${STAGES[0].id}`);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [resetting, setResetting] = useState(false);
+  // 値を変えると学習記録を読み込み直す
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // 【Read】レベルと問題ごとの成績を Supabase から読み込む
+  useEffect(() => {
+    let ignore = false;
+    Promise.all([fetchLevels(user.id), fetchQuestionStats(user.id)])
+      .then(([levels, stats]) => {
+        if (ignore) {
+          return;
+        }
+        setLevelMap(toLevelMap(levels));
+        setCorrectTotals(sumCorrectByStage(stats));
+      })
+      .catch(() => {
+        if (ignore) {
+          return;
+        }
+        // 読み込めなくても LEVEL 1 と番外編は遊べるようにする
+        setLevelMap({});
+        setErrorMessage("学習記録を読み込めませんでした。通信状況を確認して、ページを再読み込みしてください。");
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [user.id, reloadKey]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -19,33 +52,54 @@ export default function HomePage() {
     navigate(type === "quiz" ? `/quiz/${id}` : `/conversation/${id}`);
   }
 
-  function handleReset() {
-    if (window.confirm("学習記録をリセットして、最初のステージからやり直しますか？")) {
-      const initial = createInitialProgress();
-      saveProgress(user.id, initial);
-      setProgress(initial);
-      setSelected(`quiz:${STAGES[0].id}`);
+  // 【Delete】学習記録をすべて削除する
+  async function handleReset() {
+    if (!window.confirm("学習記録をリセットして、最初のステージからやり直しますか？")) {
+      return;
     }
+    setResetting(true);
+    setErrorMessage("");
+    try {
+      await deleteAllQuizData(user.id);
+      saveConversationBest(user.id, {});
+      setConversationBest({});
+      setSelected(`quiz:${STAGES[0].id}`);
+      setLevelMap(null);
+      setReloadKey((key) => key + 1);
+    } catch (error) {
+      setErrorMessage("リセットできませんでした。時間をおいてもう一度お試しください。");
+    }
+    setResetting(false);
+  }
+
+  if (levelMap === null) {
+    return <p className="loading">学習記録を読み込み中…</p>;
   }
 
   return (
     <form className="simple-form" onSubmit={handleSubmit}>
       <h2 className="form-title">クイズを選ぶ</h2>
 
+      {errorMessage && <p className="error-message" role="alert">{errorMessage}</p>}
+
       <fieldset className="form-group">
         <legend className="form-label">クイズ（全問正解で次のレベルへ）</legend>
         {STAGES.map((stage, index) => {
-          const isLocked = index >= progress.unlocked;
-          const best = progress.bestScores[stage.id];
+          const isLocked = !isStageUnlocked(levelMap, index);
+          const level = levelMap[stage.id];
           const total = stage.questions.length;
+          const correctTotal = correctTotals[stage.id] ?? 0;
 
-          let status = "";
+          const statusParts = [];
           if (isLocked) {
-            status = "🔒 前のレベルを全問正解で解放";
-          } else if (best === total) {
-            status = "★ クリア";
-          } else if (best !== undefined) {
-            status = `最高 ${best}/${total}`;
+            statusParts.push("🔒 前のレベルを全問正解で解放");
+          } else if (level?.is_cleared) {
+            statusParts.push("★ クリア");
+          } else if (level) {
+            statusParts.push(`最高 ${level.best_score}/${total}`);
+          }
+          if (correctTotal > 0) {
+            statusParts.push(`累計正解 ${correctTotal}回`);
           }
 
           return (
@@ -60,7 +114,7 @@ export default function HomePage() {
               />
               <span className="radio-text">
                 LEVEL {index + 1}　{stage.title}
-                {status && <span className="radio-status">{status}</span>}
+                {statusParts.length > 0 && <span className="radio-status">{statusParts.join("　")}</span>}
               </span>
             </label>
           );
@@ -70,7 +124,7 @@ export default function HomePage() {
       <fieldset className="form-group">
         <legend className="form-label">番外編：会話シミュレーション（いつでも遊べます）</legend>
         {CONVERSATIONS.map((conversation) => {
-          const best = progress.conversationBest[conversation.id];
+          const best = conversationBest[conversation.id];
           const total = conversation.turns.length;
 
           let status = "";
@@ -99,7 +153,9 @@ export default function HomePage() {
       </fieldset>
 
       <button type="submit" className="primary-button">スタート</button>
-      <button type="button" className="text-button" onClick={handleReset}>学習記録をリセット</button>
+      <button type="button" className="text-button" onClick={handleReset} disabled={resetting}>
+        {resetting ? "リセット中…" : "学習記録をリセット"}
+      </button>
     </form>
   );
 }

@@ -627,3 +627,10 @@ a.text-button {
   text-align: center;
   color: var(--color-muted);
 }
+
+/* 回答後の補足（正解回数など） */
+.feedback-note {
+  margin: -6px 0 12px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}

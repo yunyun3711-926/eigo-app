@@ -47,6 +47,8 @@ eigo-app/
 ├── index.html                  # Vite のエントリーポイント
 ├── vite.config.js
 ├── package.json
+├── supabase/
+│   └── schema.sql              # テーブル定義と RLS ポリシー（Supabase の SQL Editor で実行）
 └── src/
     ├── main.jsx                # 起動処理（.env 未設定時の案内もここ）
     ├── App.jsx                 # ルーティング（/login, /, /quiz/:stageId, /conversation/:conversationId）
@@ -66,7 +68,9 @@ eigo-app/
     │   └── ConversationPage.jsx # 番外編・会話シミュレーション
     ├── lib/
     │   ├── supabaseClient.js   # Supabase の接続
-    │   ├── progress.js         # 学習記録の保存・読み込み
+    │   ├── quizRepository.js   # Supabase の学習データの CRUD（レベル・問題成績・回答結果）
+    │   ├── levels.js           # ステージの解放判定などの計算
+    │   ├── progress.js         # 番外編の最高記録（localStorage）
     │   └── utils.js            # シャッフル・発音の読み上げ
     └── data/
         ├── questions.js        # クイズの問題データ（STAGES。choices の先頭が正解）
@@ -74,9 +78,24 @@ eigo-app/
 ```
 
 - 番外編の会話シミュレーションはクイズのレベルとは独立しており、いつでも遊べる。
-- 進捗（解放済みステージ数・最高点）は localStorage の `eigo-app-progress-<ユーザーID>` に、ユーザーごとに保存する。
 
 ファイルが増えた場合は、この構成を更新すること。
+
+## データベース（Supabase）
+
+クイズの学習データはユーザーごとに Supabase の3つのテーブルに保存する（定義は `supabase/schema.sql`）。
+
+| テーブル | 役割 | 主キー |
+|---|---|---|
+| `user_levels` | レベル管理（解放・クリア・最高点） | `(user_id, stage_id)` |
+| `question_stats` | 問題管理（問題ごとの正解回数・回答回数） | `(user_id, question_id)` |
+| `answer_results` | 回答結果管理（1回答ごとの履歴） | `id` |
+
+- 3テーブルとも RLS 有効。ポリシーは「ログイン中の本人（`auth.uid() = user_id`）の行だけ」読み書きできる。`answer_results` は更新不可（履歴として残す）。
+- 問題文はアプリ側（`src/data/questions.js`）にあり、DB には問題の `id`（例: `reception-01`）だけを保存する。問題の `id` は変更しないこと。
+- 次のステージは、前のステージを全問正解（`is_cleared`）すると解放される。LEVEL 1 は常に解放。
+- テーブル定義を変えるときは `schema.sql` を更新し、ユーザーに SQL Editor での実行を依頼する（Claude は DB に直接接続しない）。
+- 番外編の会話の最高記録だけは localStorage の `eigo-app-conversation-best-<ユーザーID>` に保存している。
 
 ## コーディング規約
 
