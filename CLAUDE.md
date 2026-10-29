@@ -38,6 +38,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=（Supabase の Publishable key）
 ```
 
 - 未設定のときは、画面に設定方法の案内を表示する（`src/main.jsx`）。
+- 本番（Vercel）では、同じ2つの変数を Vercel ダッシュボードの Environment Variables に設定する。`vercel.json` には書かない。
 - 開発サーバーのポートは 3000（Supabase の Site URL の初期値 `http://localhost:3000` に合わせ、確認メールのリンクからアプリに戻れるようにしている）。
 
 ## ディレクトリ構成
@@ -46,6 +47,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=（Supabase の Publishable key）
 eigo-app/
 ├── index.html                  # Vite のエントリーポイント
 ├── vite.config.js
+├── vercel.json                 # Vercel 用。どの URL でも index.html を返す（React Router の画面を直接開けるように）
 ├── package.json
 ├── supabase/
 │   └── schema.sql              # テーブル定義と RLS ポリシー（Supabase の SQL Editor で実行）
