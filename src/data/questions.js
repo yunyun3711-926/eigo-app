@@ -1,7 +1,7 @@
 // クイズの問題データ
 // stages の順番がレベルの順番（全問正解で次のステージが解放される）
 // choices の先頭が正解。表示時にシャッフルする
-const STAGES = [
+export const STAGES = [
   {
     id: "reception",
     title: "受付・カウンセリング",

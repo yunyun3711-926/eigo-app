@@ -2,7 +2,7 @@
 // クイズのレベルとは関係なく、いつでも遊べる
 // turns の customer がお客様のセリフ、choices がセラピストの返答（先頭が一番よい返し）
 // ending は最後にお客様が言うセリフ
-const CONVERSATIONS = [
+export const CONVERSATIONS = [
   {
     id: "first-visit",
     title: "はじめてのお客様をお迎え",
